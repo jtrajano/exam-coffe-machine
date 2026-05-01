@@ -10,4 +10,11 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="CoffeeMachine.Tests\**" />
+    <Content Remove="CoffeeMachine.Tests\**" />
+    <EmbeddedResource Remove="CoffeeMachine.Tests\**" />
+    <None Remove="CoffeeMachine.Tests\**" />
+  </ItemGroup>
+
 </Project>
