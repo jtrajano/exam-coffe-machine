@@ -4,6 +4,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddSingleton<CoffeeMachine.Providers.IDateTimeProvider, CoffeeMachine.Providers.DateTimeProvider>();
+builder.Services.AddSingleton<CoffeeMachine.Services.ICallCounterService, CoffeeMachine.Services.CallCounterService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
