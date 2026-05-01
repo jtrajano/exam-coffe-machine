@@ -4,3 +4,6 @@ Properties/
 bin/
 out/
 .devcontainer/
+*.db
+*.db-shm
+*.db-wal
