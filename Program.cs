@@ -1,28 +1,24 @@
-using CoffeeMachine;
+using CoffeeMachine.Endpoints;
+using CoffeeMachine.Telemetry;
+using CoffeeMachine.Providers;
+using CoffeeMachine.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-
-builder.Services.AddSingleton<CoffeeMachine.Providers.IDateTimeProvider, CoffeeMachine.Providers.DateTimeProvider>();
-builder.Services.AddSingleton<CoffeeMachine.Services.ICallCounterService, CoffeeMachine.Services.CallCounterService>();
+// Register Core Services
+builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+builder.Services.AddSingleton<ICallCounterService, CallCounterService>();
 builder.Services.AddSingleton<CoffeeMetrics>();
-builder.Services.AddHttpClient<CoffeeMachine.Services.IWeatherService, CoffeeMachine.Services.OpenWeatherService>();
+
+// Register Weather Integration (Phase 3)
+builder.Services.AddHttpClient<IWeatherService, OpenWeatherService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
-app.UseHttpsRedirection();
-
-app.MapEndpoints();
+// Map Endpoints
+app.MapCoffeeEndpoints();
 
 app.Run();
 
+// Expose for Integration Tests
 public partial class Program { }

@@ -1,13 +1,13 @@
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using CoffeeMachine.Models;
 using CoffeeMachine.Providers;
 using CoffeeMachine.Services;
 
-namespace CoffeeMachine;
+namespace CoffeeMachine.Endpoints;
 
-public static class Endpoints
+public static class CoffeeEndpoints
 {
-    public static void MapEndpoints(this WebApplication app)
+    public static void MapCoffeeEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/brew-coffee", BrewCoffeeAsync);
     }
@@ -41,6 +41,6 @@ public static class Endpoints
             : "Your piping hot coffee is ready";
 
         string formattedDate = dateNow.ToString("yyyy-MM-ddTHH:mm:ss") + dateNow.ToString("zzz").Replace(":", "");
-        return Results.Ok(new { message = message, prepared = formattedDate });
+        return Results.Ok(new CoffeeResponse(message, formattedDate));
     }
 }

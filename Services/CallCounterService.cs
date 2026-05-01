@@ -1,6 +1,7 @@
 using System;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
+using CoffeeMachine.Telemetry;
 
 namespace CoffeeMachine.Services;
 

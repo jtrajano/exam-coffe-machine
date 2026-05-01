@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using CoffeeMachine.Providers;
 using CoffeeMachine.Services;
+using CoffeeMachine.Models;
+using CoffeeMachine.Telemetry;
 using Xunit;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
@@ -192,6 +194,4 @@ public class CoffeeEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         public MockWeatherService(double? temp) => _temp = temp;
         public Task<double?> GetCurrentTemperatureAsync() => Task.FromResult(_temp);
     }
-
-    private record CoffeeResponse(string message, string prepared);
 }

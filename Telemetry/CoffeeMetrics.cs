@@ -1,6 +1,6 @@
 using System.Diagnostics.Metrics;
 
-namespace CoffeeMachine;
+namespace CoffeeMachine.Telemetry;
 
 public class CoffeeMetrics 
 {
