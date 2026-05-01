@@ -12,6 +12,16 @@ var builder = WebApplication.CreateBuilder(args);
 // OpenAPI & Scalar Configuration (.NET 10 Way)
 builder.Services.AddOpenApi();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
@@ -52,6 +62,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseSecurityHeaders();
+app.UseCors("AllowAll");
 app.UseStatusCodePages();
 app.UseExceptionHandler();
 app.UseRateLimiter();
