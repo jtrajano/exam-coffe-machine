@@ -45,6 +45,7 @@ public class CoffeeEndpointTests : IClassFixture<WebApplicationFactory<Program>>
             {
                 services.AddSingleton<IDateTimeProvider>(new MockDateTimeProvider(mockDate));
                 services.AddSingleton<ICallCounterService>(new CallCounterService(_testConfig, _testMetrics));
+                services.AddSingleton<IWeatherService>(new MockWeatherService(20)); // Cold weather
             });
         }).CreateClient();
 
@@ -61,6 +62,32 @@ public class CoffeeEndpointTests : IClassFixture<WebApplicationFactory<Program>>
     }
 
     [Fact]
+    public async Task GetBrewCoffee_WhenHot_ReturnsIcedCoffeeMessage()
+    {
+        // Arrange
+        var mockDate = new DateTimeOffset(2021, 2, 3, 11, 56, 24, TimeSpan.FromHours(9));
+        var client = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddSingleton<IDateTimeProvider>(new MockDateTimeProvider(mockDate));
+                services.AddSingleton<ICallCounterService>(new CallCounterService(_testConfig, _testMetrics));
+                services.AddSingleton<IWeatherService>(new MockWeatherService(31)); // Hot weather (> 30)
+            });
+        }).CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/brew-coffee");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        
+        var content = await response.Content.ReadFromJsonAsync<CoffeeResponse>();
+        Assert.NotNull(content);
+        Assert.Equal("Your refreshing iced coffee is ready", content.message);
+    }
+
+    [Fact]
     public async Task GetBrewCoffee_OnApril1st_Returns418ImATeapot()
     {
         // Arrange
@@ -71,6 +98,7 @@ public class CoffeeEndpointTests : IClassFixture<WebApplicationFactory<Program>>
             {
                 services.AddSingleton<IDateTimeProvider>(new MockDateTimeProvider(mockDate));
                 services.AddSingleton<ICallCounterService>(new CallCounterService(_testConfig, _testMetrics));
+                services.AddSingleton<IWeatherService>(new MockWeatherService(20));
             });
         }).CreateClient();
 
@@ -96,6 +124,7 @@ public class CoffeeEndpointTests : IClassFixture<WebApplicationFactory<Program>>
             {
                 services.AddSingleton<IDateTimeProvider>(new MockDateTimeProvider(mockDate));
                 services.AddSingleton<ICallCounterService>(sharedCounter);
+                services.AddSingleton<IWeatherService>(new MockWeatherService(20));
             });
         }).CreateClient();
 
@@ -155,6 +184,13 @@ public class CoffeeEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         {
             Now = now;
         }
+    }
+
+    private class MockWeatherService : IWeatherService
+    {
+        private readonly double? _temp;
+        public MockWeatherService(double? temp) => _temp = temp;
+        public Task<double?> GetCurrentTemperatureAsync() => Task.FromResult(_temp);
     }
 
     private record CoffeeResponse(string message, string prepared);

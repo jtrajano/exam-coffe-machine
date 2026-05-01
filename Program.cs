@@ -9,6 +9,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddSingleton<CoffeeMachine.Providers.IDateTimeProvider, CoffeeMachine.Providers.DateTimeProvider>();
 builder.Services.AddSingleton<CoffeeMachine.Services.ICallCounterService, CoffeeMachine.Services.CallCounterService>();
 builder.Services.AddSingleton<CoffeeMetrics>();
+builder.Services.AddHttpClient<CoffeeMachine.Services.IWeatherService, CoffeeMachine.Services.OpenWeatherService>();
 
 var app = builder.Build();
 

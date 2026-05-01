@@ -14,7 +14,8 @@ public static class Endpoints
 
     public static async Task<IResult> BrewCoffeeAsync(
         [FromServices] IDateTimeProvider dateTimeProvider,
-        [FromServices] ICallCounterService callCounterService)
+        [FromServices] ICallCounterService callCounterService,
+        [FromServices] IWeatherService weatherService)
     {
         var dateNow = dateTimeProvider.Now;
         
@@ -33,7 +34,13 @@ public static class Endpoints
             return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
         }
 
+        // Check weather for extra credit
+        var temperature = await weatherService.GetCurrentTemperatureAsync();
+        var message = (temperature > 30) 
+            ? "Your refreshing iced coffee is ready" 
+            : "Your piping hot coffee is ready";
+
         string formattedDate = dateNow.ToString("yyyy-MM-ddTHH:mm:ss") + dateNow.ToString("zzz").Replace(":", "");
-        return Results.Ok(new { message = "Your piping hot coffee is ready", prepared = formattedDate });
+        return Results.Ok(new { message = message, prepared = formattedDate });
     }
 }
