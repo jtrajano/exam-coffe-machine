@@ -1,70 +1,71 @@
-# Coffee Machine API
+# Coffee Machine API ☕
 
-A .NET 10 Minimal API implementation for a technical assessment. The project provides a `/brew-coffee` endpoint with specific business logic for error handling, state persistence, and external weather integration.
+A production-grade .NET 10 Minimal API implementation designed for a senior technical assessment. This service provides a resilient, observable, and secure coffee brewing logic with external weather integration.
 
-## Implementation Details
+## 🚀 Key Features & Implementation
 
-### Core Requirements
+### 1. Robust Business Logic
+- **April Fools Logic**: Returns `HTTP 418 I'm a teapot` on April 1st.
+- **Maintenance Cycle**: Returns `HTTP 503 Service Unavailable` on every 5th request.
+- **Persistence**: Uses **SQLite with Write-Ahead Logging (WAL)** for high-concurrency atomic counter tracking. Counts persist across application restarts.
+- **ISO 8601 Compliance**: All response timestamps strictly follow ISO 8601 standards.
 
-- **HTTP 418**: Returns "I'm a teapot" on April 1st.
-- **HTTP 503**: Returns "Service Unavailable" every 5th call.
-- **Persistence**: Unlike a standard in-memory counter, this implementation uses a local SQLite database (`coffee.db`) to track the request count. This ensures the 5th-call logic remains accurate even if the application process restarts.
-- **ISO 8601**: Responses include a formatted timestamp as required.
+### 2. Advanced Weather Integration (Extra Credit)
+- **Intelligent Brewing**: Integrates with OpenWeatherMap. If the temperature > 30°C, it automatically prepares "refreshing iced coffee" instead of "piping hot coffee."
+- **Polly Resilience**: The weather client is protected by the **Microsoft Standard Resilience Handler**, including retries, circuit breaking, and timeouts.
+- **Graceful Degradation**: If the weather service is unavailable or misconfigured, the API defaults to "piping hot" coffee to ensure continuous service.
 
-### Extra Credit: Weather Integration
+### 3. Security & Hardening
+- **API Key Authentication**: Protected via a custom `IEndpointFilter`. Requires a valid `X-API-Key` header for all requests.
+- **Rate Limiting**: Integrated fixed-window rate limiter (10 req/min) to prevent abuse.
+- **Security Headers**: Enforces `X-Content-Type-Options`, `X-Frame-Options`, and other safety headers.
+- **Global Exception Handling**: Centralized `ProblemDetails` middleware ensures consistent, non-leaking error responses.
 
-The API integrates with OpenWeatherMap. When the temperature at the configured location exceeds 30°C, the response message switches from "piping hot" to "refreshing iced coffee." The implementation is resilient; if the API key is missing or the external service is down, it fails gracefully back to the default hot coffee message.
+### 4. Observability
+- **Structured Logging**: Uses modern structured log templates for better searchability in tools like Azure Application Insights or ELK.
+- **Custom Metrics**: Exposes `CoffeeMachine.Brewed` counters via `System.Diagnostics.Metrics`.
 
-## Project Structure
+---
 
-The project is organized by concern to ensure maintainability:
+## 🛠️ Getting Started
 
-- `/Endpoints`: Minimal API route mapping and handlers.
-- `/Services`: Business logic for call counting and weather integration.
-- `/Models`: DTOs used for API responses.
-- `/Providers`: Infrastructure abstractions (e.g., `IDateTimeProvider` for testability).
-- `/Telemetry`: Custom metrics using `System.Diagnostics.Metrics`.
-
-## Getting Started
-
-### Local Setup
-
-1. Ensure .NET 10 SDK is installed.
-2. **Security**: This project uses `.NET User Secrets` to avoid exposing API keys. To add your OpenWeatherMap key, run:
+### Local Development
+1. **Prerequisites**: .NET 10 SDK.
+2. **Secrets Configuration**: The project uses `.NET User Secrets` for sensitive keys.
    ```bash
    dotnet user-secrets init
    dotnet user-secrets set "Weather:ApiKey" "your_actual_key"
    ```
+3. **Execution**:
+   ```bash
+   dotnet run --project src/CoffeeMachine
+   ```
 
-### Execution
-
-```bash
-dotnet run
-```
-
-Once running, the **Swagger UI** is available at the root URL (e.g., `http://localhost:5000/`) for interactive testing.
-
-### Testing
-
-Run the integration test suite via the CLI:
+### 🧪 Testing
+The project includes a robust integration test suite with **full isolation**. Every test runs with a unique, temporary SQLite database to ensure no state bleed.
 
 ```bash
 dotnet test
 ```
 
-The tests use a `WebApplicationFactory` and mock providers to verify logic across specific dates, request volumes, and temperature thresholds.
+---
 
-## Monitoring
+## 📖 API Documentation & Manual Testing
 
-The application exposes custom metrics that can be monitored using `dotnet-counters`:
+### Interactive Documentation (Scalar)
+In .NET 10, we've moved to **Scalar** for a more modern and responsive API reference.
+- **URL**: `http://localhost:<port>/scalar/v1`
 
-```bash
-dotnet-counters monitor -n CoffeeMachine --counters CoffeeMachine
-```
+### Authentication for Examiners
+To test the protected endpoints, use the following **Default Key**:
+- **Header**: `X-API-Key`
+- **Value**: `C0ffee-Key-2024`
 
-## Technical Choices
+In the Scalar UI, look for the **Security/Authorize** section to enter the key once for all requests.
 
-- **Minimal APIs**: Used for better performance and a cleaner entry point.
-- **Rate Limiting**: Implemented a fixed-window rate limiter (10 requests/min) to protect the API from automated abuse and ensure service stability.
-- **DI Abstractions**: The use of `IDateTimeProvider` allows for deterministic testing of date-based logic (April Fools) without hacking the system clock.
-- **Transactions**: SQLite updates are wrapped in transactions to ensure thread-safety and data integrity during high-concurrency requests.
+---
+
+## 🏗️ Technical Architecture
+- **Clean Code**: Logic is decoupled into `Services`, `Middleware`, `Providers`, and `Endpoints`.
+- **TDD Ready**: Use of abstractions like `IDateTimeProvider` ensures that time-sensitive logic can be verified deterministically.
+- **Performance**: Asynchronous operations throughout to prevent thread starvation during database or network I/O.

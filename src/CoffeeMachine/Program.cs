@@ -1,60 +1,50 @@
 using CoffeeMachine.Endpoints;
-using CoffeeMachine.Telemetry;
+using CoffeeMachine.Middleware;
 using CoffeeMachine.Providers;
 using CoffeeMachine.Services;
-using CoffeeMachine.Middleware;
+using CoffeeMachine.Telemetry;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Swagger/OpenAPI Configuration
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// OpenAPI & Scalar Configuration (.NET 10 Way)
+builder.Services.AddOpenApi();
+
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-// Rate Limiting Configuration
-builder.Services.AddRateLimiter(options =>
-{
-    options.AddFixedWindowLimiter(policyName: "fixed", options =>
-    {
-        options.PermitLimit = 10;
-        options.Window = TimeSpan.FromMinutes(1);
-        options.QueueLimit = 0;
-    });
-});
+builder.Services.AddHttpClient<IWeatherService, OpenWeatherService>()
+    .AddStandardResilienceHandler();
 
-// Register Core Services
 builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 builder.Services.AddSingleton<ICallCounterService, CallCounterService>();
 builder.Services.AddSingleton<CoffeeMetrics>();
 
-// Register Weather Integration (Phase 3) with Polly Resilience
-builder.Services.AddHttpClient<IWeatherService, OpenWeatherService>()
-    .AddStandardResilienceHandler();
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("fixed", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 10;
+        opt.QueueLimit = 0;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 
 var app = builder.Build();
-app.UseExceptionHandler();
 
-// Use Rate Limiting
-app.UseRateLimiter();
-
-// Enable Swagger UI
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.RoutePrefix = string.Empty; // Serve Swagger at the app root
-    });
+    app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
-// Map Endpoints
+app.UseStatusCodePages();
+app.UseExceptionHandler();
+app.UseRateLimiter();
+
 app.MapCoffeeEndpoints();
 
 app.Run();
-
-// Expose for Integration Tests
-public partial class Program { }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using CoffeeMachine.Models;
 using CoffeeMachine.Providers;
 using CoffeeMachine.Services;
+using CoffeeMachine.Middleware;
 
 namespace CoffeeMachine.Endpoints;
 
@@ -18,8 +19,10 @@ public static class CoffeeEndpoints
            })
            .Produces<CoffeeResponse>(StatusCodes.Status200OK)
            .Produces(StatusCodes.Status418ImATeapot)
+           .Produces(StatusCodes.Status401Unauthorized)
            .Produces(StatusCodes.Status503ServiceUnavailable)
-           .RequireRateLimiting("fixed");
+           .RequireRateLimiting("fixed")
+           .AddEndpointFilter<ApiKeyFilter>();
     }
 
     public static async Task<IResult> BrewCoffeeAsync(
