@@ -1,3 +1,6 @@
 .vs/
 obj/
 Properties/
+bin/
+out/
+.devcontainer/
