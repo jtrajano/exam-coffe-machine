@@ -51,6 +51,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseSecurityHeaders();
 app.UseStatusCodePages();
 app.UseExceptionHandler();
 app.UseRateLimiter();
