@@ -9,7 +9,16 @@ public static class CoffeeEndpoints
 {
     public static void MapCoffeeEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/brew-coffee", BrewCoffeeAsync);
+        app.MapGet("/brew-coffee", BrewCoffeeAsync)
+           .WithName("BrewCoffee")
+           .WithOpenApi(operation => new(operation)
+           {
+               Summary = "Brews a coffee",
+               Description = "Checks the date (April Fools), request count (Maintenance), and weather (Iced Coffee) before brewing."
+           })
+           .Produces<CoffeeResponse>(StatusCodes.Status200OK)
+           .Produces(StatusCodes.Status418ImATeapot)
+           .Produces(StatusCodes.Status503ServiceUnavailable);
     }
 
     public static async Task<IResult> BrewCoffeeAsync(

@@ -32,6 +32,7 @@ The project is organized by concern to ensure maintainability:
 ```bash
 dotnet run
 ```
+Once running, the **Swagger UI** is available at the root URL (e.g., `http://localhost:5000/`) for interactive testing.
 
 ### Testing
 Run the integration test suite via the CLI:
