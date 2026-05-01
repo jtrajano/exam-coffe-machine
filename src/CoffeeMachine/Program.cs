@@ -30,8 +30,9 @@ builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 builder.Services.AddSingleton<ICallCounterService, CallCounterService>();
 builder.Services.AddSingleton<CoffeeMetrics>();
 
-// Register Weather Integration (Phase 3)
-builder.Services.AddHttpClient<IWeatherService, OpenWeatherService>();
+// Register Weather Integration (Phase 3) with Polly Resilience
+builder.Services.AddHttpClient<IWeatherService, OpenWeatherService>()
+    .AddStandardResilienceHandler();
 
 var app = builder.Build();
 app.UseExceptionHandler();
