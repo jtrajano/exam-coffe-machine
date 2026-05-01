@@ -148,6 +148,29 @@ public class CoffeeEndpointTests : IClassFixture<WebApplicationFactory<Program>>
     }
 
     [Fact]
+    public async Task GetBrewCoffee_WhenExceptionOccurs_Returns500InternalServerError()
+    {
+        // Arrange
+        var client = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddSingleton<IWeatherService>(new MockWeatherService(null, shouldThrow: true));
+            });
+        }).CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/brew-coffee");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        var content = await response.Content.ReadFromJsonAsync<Microsoft.AspNetCore.Mvc.ProblemDetails>();
+        Assert.NotNull(content);
+        Assert.Equal("Server Error", content.Title);
+        Assert.Equal(500, content.Status);
+    }
+
+    [Fact]
     public async Task GetBrewCoffee_ConcurrentRequests_IncrementsCorrectly()
     {
         // Arrange
@@ -225,7 +248,18 @@ public class CoffeeEndpointTests : IClassFixture<WebApplicationFactory<Program>>
     private class MockWeatherService : IWeatherService
     {
         private readonly double? _temp;
-        public MockWeatherService(double? temp) => _temp = temp;
-        public Task<double?> GetCurrentTemperatureAsync() => Task.FromResult(_temp);
+        private readonly bool _shouldThrow;
+
+        public MockWeatherService(double? temp, bool shouldThrow = false)
+        {
+            _temp = temp;
+            _shouldThrow = shouldThrow;
+        }
+
+        public Task<double?> GetCurrentTemperatureAsync()
+        {
+            if (_shouldThrow) throw new Exception("Simulated weather service failure");
+            return Task.FromResult(_temp);
+        }
     }
 }

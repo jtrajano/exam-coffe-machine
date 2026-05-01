@@ -2,6 +2,7 @@ using CoffeeMachine.Endpoints;
 using CoffeeMachine.Telemetry;
 using CoffeeMachine.Providers;
 using CoffeeMachine.Services;
+using CoffeeMachine.Middleware;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 
@@ -10,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Swagger/OpenAPI Configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 // Rate Limiting Configuration
 builder.Services.AddRateLimiter(options =>
@@ -31,6 +34,7 @@ builder.Services.AddSingleton<CoffeeMetrics>();
 builder.Services.AddHttpClient<IWeatherService, OpenWeatherService>();
 
 var app = builder.Build();
+app.UseExceptionHandler();
 
 // Use Rate Limiting
 app.UseRateLimiter();
