@@ -2,5 +2,5 @@ namespace CoffeeMachine.Services;
 
 public interface ICallCounterService
 {
-    int IncrementAndGet();
+    Task<int> IncrementAndGetAsync();
 }

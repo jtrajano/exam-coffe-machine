@@ -148,6 +148,40 @@ public class CoffeeEndpointTests : IClassFixture<WebApplicationFactory<Program>>
     }
 
     [Fact]
+    public async Task GetBrewCoffee_ConcurrentRequests_IncrementsCorrectly()
+    {
+        // Arrange
+        var mockDate = new DateTimeOffset(2023, 5, 1, 10, 0, 0, TimeSpan.Zero);
+        var sharedCounter = new CallCounterService(_testConfig, _testMetrics);
+        var client = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddSingleton<IDateTimeProvider>(new MockDateTimeProvider(mockDate));
+                services.AddSingleton<ICallCounterService>(sharedCounter);
+                services.AddSingleton<IWeatherService>(new MockWeatherService(20));
+            });
+        }).CreateClient();
+
+        // Act
+        // Fire 10 concurrent requests
+        var tasks = Enumerable.Range(1, 10).Select(_ => client.GetAsync("/brew-coffee")).ToList();
+        var responses = await Task.WhenAll(tasks);
+
+        // Assert
+        int okCount = responses.Count(r => r.StatusCode == HttpStatusCode.OK);
+        int serviceUnavailableCount = responses.Count(r => r.StatusCode == HttpStatusCode.ServiceUnavailable);
+
+        // Out of 10 calls, call 5 and 10 should be 503
+        Assert.Equal(8, okCount);
+        Assert.Equal(2, serviceUnavailableCount);
+
+        // Verify final count in DB
+        int finalCount = await sharedCounter.IncrementAndGetAsync(); // Should be 11
+        Assert.Equal(11, finalCount);
+    }
+
+    [Fact]
     public async Task GetBrewCoffee_PersistsCounterAcrossRestarts()
     {
         // Arrange
@@ -162,14 +196,14 @@ public class CoffeeEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         // Simulating 1st Application Start
         {
             var counter1 = new CallCounterService(config, _testMetrics);
-            counter1.IncrementAndGet(); // count = 1
-            counter1.IncrementAndGet(); // count = 2
+            await counter1.IncrementAndGetAsync(); // count = 1
+            await counter1.IncrementAndGetAsync(); // count = 2
         }
 
         // Simulating 2nd Application Start (Restart)
         {
             var counter2 = new CallCounterService(config, _testMetrics);
-            var currentCount = counter2.IncrementAndGet(); // should be 3
+            var currentCount = await counter2.IncrementAndGetAsync(); // should be 3
             Assert.Equal(3, currentCount);
         }
 

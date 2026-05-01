@@ -25,6 +25,7 @@ public class CallCounterService : ICallCounterService
         var command = connection.CreateCommand();
         command.CommandText = 
         @"
+            PRAGMA journal_mode=WAL;
             CREATE TABLE IF NOT EXISTS Counters (
                 Id INTEGER PRIMARY KEY,
                 Value INTEGER
@@ -34,23 +35,23 @@ public class CallCounterService : ICallCounterService
         command.ExecuteNonQuery();
     }
 
-    public int IncrementAndGet()
+    public async Task<int> IncrementAndGetAsync()
     {
         using var connection = new SqliteConnection(_connectionString);
-        connection.Open();
+        await connection.OpenAsync();
 
-        using var transaction = connection.BeginTransaction();
+        using var transaction = await connection.BeginTransactionAsync();
         
         var command = connection.CreateCommand();
-        command.Transaction = transaction;
+        command.Transaction = transaction as SqliteTransaction;
         command.CommandText = 
         @"
             UPDATE Counters SET Value = Value + 1 WHERE Id = 1;
             SELECT Value FROM Counters WHERE Id = 1;
         ";
 
-        var result = command.ExecuteScalar();
-        transaction.Commit();
+        var result = await command.ExecuteScalarAsync();
+        await transaction.CommitAsync();
 
         var count = Convert.ToInt32(result);
         _metrics.Brewed();

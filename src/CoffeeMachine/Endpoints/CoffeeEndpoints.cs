@@ -36,7 +36,7 @@ public static class CoffeeEndpoints
         }
 
         // Increment counter
-        int callCount = callCounterService.IncrementAndGet();
+        int callCount = await callCounterService.IncrementAndGetAsync();
         
         // Every 5th call returns 503
         if (callCount % 5 == 0)
