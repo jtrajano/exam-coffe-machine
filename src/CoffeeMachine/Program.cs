@@ -38,7 +38,17 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapScalarApiReference(options =>
+    {
+        options.WithTitle("Coffee Machine API")
+               .WithTheme(ScalarTheme.Moon)
+               .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
+               .WithPreferredScheme("ApiKey")
+               .WithApiKeyAuthentication(apiKey =>
+               {
+                   apiKey.Token = "C0ffee-Key-2024";
+               });
+    });
 }
 
 app.UseStatusCodePages();
