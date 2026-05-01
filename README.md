@@ -65,5 +65,6 @@ dotnet-counters monitor -n CoffeeMachine --counters CoffeeMachine
 ## Technical Choices
 
 - **Minimal APIs**: Used for better performance and a cleaner entry point.
+- **Rate Limiting**: Implemented a fixed-window rate limiter (10 requests/min) to protect the API from automated abuse and ensure service stability.
 - **DI Abstractions**: The use of `IDateTimeProvider` allows for deterministic testing of date-based logic (April Fools) without hacking the system clock.
 - **Transactions**: SQLite updates are wrapped in transactions to ensure thread-safety and data integrity during high-concurrency requests.

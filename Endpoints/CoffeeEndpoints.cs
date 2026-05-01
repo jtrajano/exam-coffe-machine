@@ -18,7 +18,8 @@ public static class CoffeeEndpoints
            })
            .Produces<CoffeeResponse>(StatusCodes.Status200OK)
            .Produces(StatusCodes.Status418ImATeapot)
-           .Produces(StatusCodes.Status503ServiceUnavailable);
+           .Produces(StatusCodes.Status503ServiceUnavailable)
+           .RequireRateLimiting("fixed");
     }
 
     public static async Task<IResult> BrewCoffeeAsync(
