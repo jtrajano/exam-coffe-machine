@@ -12,6 +12,8 @@ using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
 using System.Diagnostics.Metrics;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CoffeeMachine.Tests;
 
@@ -46,7 +48,7 @@ public class CoffeeEndpointTests : IClassFixture<WebApplicationFactory<Program>>
             builder.ConfigureTestServices(services =>
             {
                 services.AddSingleton<IDateTimeProvider>(new MockDateTimeProvider(mockDate));
-                services.AddSingleton<ICallCounterService>(new CallCounterService(_testConfig, _testMetrics));
+                services.AddSingleton<ICallCounterService>(new CallCounterService(_testConfig, _testMetrics, NullLogger<CallCounterService>.Instance));
                 services.AddSingleton<IWeatherService>(new MockWeatherService(20)); // Cold weather
             });
         }).CreateClient();
@@ -73,7 +75,7 @@ public class CoffeeEndpointTests : IClassFixture<WebApplicationFactory<Program>>
             builder.ConfigureTestServices(services =>
             {
                 services.AddSingleton<IDateTimeProvider>(new MockDateTimeProvider(mockDate));
-                services.AddSingleton<ICallCounterService>(new CallCounterService(_testConfig, _testMetrics));
+                services.AddSingleton<ICallCounterService>(new CallCounterService(_testConfig, _testMetrics, NullLogger<CallCounterService>.Instance));
                 services.AddSingleton<IWeatherService>(new MockWeatherService(31)); // Hot weather (> 30)
             });
         }).CreateClient();
@@ -99,7 +101,7 @@ public class CoffeeEndpointTests : IClassFixture<WebApplicationFactory<Program>>
             builder.ConfigureTestServices(services =>
             {
                 services.AddSingleton<IDateTimeProvider>(new MockDateTimeProvider(mockDate));
-                services.AddSingleton<ICallCounterService>(new CallCounterService(_testConfig, _testMetrics));
+                services.AddSingleton<ICallCounterService>(new CallCounterService(_testConfig, _testMetrics, NullLogger<CallCounterService>.Instance));
                 services.AddSingleton<IWeatherService>(new MockWeatherService(20));
             });
         }).CreateClient();
@@ -119,7 +121,7 @@ public class CoffeeEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         // Arrange
         var mockDate = new DateTimeOffset(2023, 5, 1, 10, 0, 0, TimeSpan.Zero);
         // We need a shared counter instance across the 5 calls
-        var sharedCounter = new CallCounterService(_testConfig, _testMetrics);
+        var sharedCounter = new CallCounterService(_testConfig, _testMetrics, NullLogger<CallCounterService>.Instance);
         var client = _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureTestServices(services =>
@@ -175,7 +177,7 @@ public class CoffeeEndpointTests : IClassFixture<WebApplicationFactory<Program>>
     {
         // Arrange
         var mockDate = new DateTimeOffset(2023, 5, 1, 10, 0, 0, TimeSpan.Zero);
-        var sharedCounter = new CallCounterService(_testConfig, _testMetrics);
+        var sharedCounter = new CallCounterService(_testConfig, _testMetrics, NullLogger<CallCounterService>.Instance);
         var client = _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureTestServices(services =>
@@ -218,14 +220,14 @@ public class CoffeeEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         
         // Simulating 1st Application Start
         {
-            var counter1 = new CallCounterService(config, _testMetrics);
+            var counter1 = new CallCounterService(config, _testMetrics, NullLogger<CallCounterService>.Instance);
             await counter1.IncrementAndGetAsync(); // count = 1
             await counter1.IncrementAndGetAsync(); // count = 2
         }
 
         // Simulating 2nd Application Start (Restart)
         {
-            var counter2 = new CallCounterService(config, _testMetrics);
+            var counter2 = new CallCounterService(config, _testMetrics, NullLogger<CallCounterService>.Instance);
             var currentCount = await counter2.IncrementAndGetAsync(); // should be 3
             Assert.Equal(3, currentCount);
         }
